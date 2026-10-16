@@ -22,12 +22,10 @@ const FOU_ATTR_PEER_V6: u16 = 9;
 const FOU_ATTR_PEER_PORT: u16 = 10;
 const FOU_ATTR_IFINDEX: u16 = 11;
 
-/// No encapsulation, see `FOU_ENCAP_UNSPEC` of the kernel.
-pub const FOU_ENCAP_UNSPEC: u8 = 0;
 /// Foo over UDP.
-pub const FOU_ENCAP_DIRECT: u8 = 1;
+const FOU_ENCAP_DIRECT: u8 = 1;
 /// Generic UDP encapsulation.
-pub const FOU_ENCAP_GUE: u8 = 2;
+const FOU_ENCAP_GUE: u8 = 2;
 
 /// Encapsulation type of a FOU listener, see `FOU_ENCAP_*` of the kernel.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

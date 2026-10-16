@@ -9,11 +9,11 @@ use netlink_packet_generic::{GenlFamily, GenlHeader};
 use crate::FouAttribute;
 
 /// Add a FOU listener.
-pub const FOU_CMD_ADD: u8 = 1;
+const FOU_CMD_ADD: u8 = 1;
 /// Delete a FOU listener.
-pub const FOU_CMD_DEL: u8 = 2;
+const FOU_CMD_DEL: u8 = 2;
 /// Get or dump FOU listeners.
-pub const FOU_CMD_GET: u8 = 3;
+const FOU_CMD_GET: u8 = 3;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[non_exhaustive]

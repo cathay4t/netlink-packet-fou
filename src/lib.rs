@@ -25,8 +25,5 @@ mod message;
 #[cfg(test)]
 mod test;
 
-pub use attribute::{
-    FOU_ENCAP_DIRECT, FOU_ENCAP_GUE, FOU_ENCAP_UNSPEC, FouAddressFamily,
-    FouAttribute, FouEncap,
-};
-pub use message::{FOU_CMD_ADD, FOU_CMD_DEL, FOU_CMD_GET, FouCmd, FouMessage};
+pub use attribute::{FouAddressFamily, FouAttribute, FouEncap};
+pub use message::{FouCmd, FouMessage};
