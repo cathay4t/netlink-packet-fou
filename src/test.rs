@@ -17,9 +17,9 @@ fn assert_parse_and_emit(raw: &[u8], expected: &FouMessage) {
         expected
     );
 
-    let mut buffer = vec![0; expected.buffer_len() + 4];
-    header.emit(&mut buffer);
-    expected.emit(&mut buffer[4..]);
+    let mut buffer = Vec::new();
+    header.emit(&mut buffer).unwrap();
+    expected.emit(&mut buffer).unwrap();
     assert_eq!(&buffer, &raw);
 }
 

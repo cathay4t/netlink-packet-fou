@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 use netlink_packet_core::{
-    DecodeError, Emitable, ErrorContext, NlasIterator, Parseable,
+    DecodeError, Emitable, EncodeError, ErrorContext, NlasIterator, Parseable,
     ParseableParametrized,
 };
 use netlink_packet_generic::{GenlFamily, GenlHeader};
@@ -76,12 +76,8 @@ impl GenlFamily for FouMessage {
 }
 
 impl Emitable for FouMessage {
-    fn emit(&self, buffer: &mut [u8]) {
-        self.attributes.as_slice().emit(buffer)
-    }
-
-    fn buffer_len(&self) -> usize {
-        self.attributes.as_slice().buffer_len()
+    fn emit_value(&self, out: &mut Vec<u8>) -> Result<(), EncodeError> {
+        self.attributes.as_slice().emit(out)
     }
 }
 
@@ -100,9 +96,8 @@ impl ParseableParametrized<[u8], GenlHeader> for FouMessage {
 fn parse_attributes(buf: &[u8]) -> Result<Vec<FouAttribute>, DecodeError> {
     let mut attributes = Vec::new();
     let error_msg = "failed to parse fou netlink attributes";
-    for nla in NlasIterator::new(buf) {
-        let nla = &nla.context(error_msg)?;
-        attributes.push(FouAttribute::parse(nla)?);
+    for nla in NlasIterator::new(buf)? {
+        attributes.push(FouAttribute::parse(&nla).context(error_msg)?);
     }
     Ok(attributes)
 }

@@ -3,8 +3,9 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use netlink_packet_core::{
-    DecodeError, DefaultNla, ErrorContext, Nla, NlaBuffer, Parseable, emit_i32,
-    emit_u16_be, parse_i32, parse_u8, parse_u16_be,
+    DecodeError, DefaultNla, EncodeError, ErrorContext, Nla, NlaBuffer,
+    Parseable, append_bytes, append_i32, append_u16_be, parse_i32, parse_u8,
+    parse_u16_be,
 };
 
 const AF_INET: u8 = 2;
@@ -109,18 +110,6 @@ pub enum FouAttribute {
 }
 
 impl Nla for FouAttribute {
-    fn value_len(&self) -> usize {
-        match self {
-            Self::Port(_) | Self::PeerPort(_) => 2,
-            Self::Family(_) | Self::Ipproto(_) | Self::Encap(_) => 1,
-            Self::RemcsumNopartial => 0,
-            Self::LocalV4(_) | Self::PeerV4(_) => 4,
-            Self::LocalV6(_) | Self::PeerV6(_) => 16,
-            Self::IfIndex(_) => 4,
-            Self::Other(attr) => attr.value_len(),
-        }
-    }
-
     fn kind(&self) -> u16 {
         match self {
             Self::Port(_) => FOU_ATTR_PORT,
@@ -138,29 +127,30 @@ impl Nla for FouAttribute {
         }
     }
 
-    fn emit_value(&self, buffer: &mut [u8]) {
+    fn emit_value(&self, out: &mut Vec<u8>) -> Result<(), EncodeError> {
         match self {
             Self::Port(port) | Self::PeerPort(port) => {
-                emit_u16_be(buffer, *port).unwrap()
+                append_u16_be(out, *port);
             }
-            Self::Family(family) => buffer[0] = (*family).into(),
-            Self::Ipproto(ipproto) => buffer[0] = *ipproto,
-            Self::Encap(encap) => buffer[0] = (*encap).into(),
+            Self::Family(family) => out.push((*family).into()),
+            Self::Ipproto(ipproto) => out.push(*ipproto),
+            Self::Encap(encap) => out.push((*encap).into()),
             Self::RemcsumNopartial => (),
             Self::LocalV4(addr) | Self::PeerV4(addr) => {
-                buffer.copy_from_slice(&addr.octets())
+                append_bytes(out, &addr.octets());
             }
             Self::LocalV6(addr) | Self::PeerV6(addr) => {
-                buffer.copy_from_slice(&addr.octets())
+                append_bytes(out, &addr.octets());
             }
-            Self::IfIndex(index) => emit_i32(buffer, *index).unwrap(),
-            Self::Other(attr) => attr.emit_value(buffer),
+            Self::IfIndex(index) => append_i32(out, *index),
+            Self::Other(attr) => return attr.emit_value(out),
         }
+        Ok(())
     }
 }
 
-impl<'a, T: AsRef<[u8]> + ?Sized> Parseable<NlaBuffer<&'a T>> for FouAttribute {
-    fn parse(buf: &NlaBuffer<&'a T>) -> Result<Self, DecodeError> {
+impl<'a> Parseable<NlaBuffer<'a>> for FouAttribute {
+    fn parse(buf: &NlaBuffer<'a>) -> Result<Self, DecodeError> {
         let payload = buf.value();
         Ok(match buf.kind() {
             FOU_ATTR_PORT => Self::Port(
